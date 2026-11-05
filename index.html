@@ -1,0 +1,150 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>手沖計時</title><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#1f2a36"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="手沖計時"><link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon-180.png"><style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,"PingFang TC","Noto Sans TC",sans-serif;background:#1d1611;color:#f3e9dc;padding:12px 14px 40px}
+h2{font-size:18px;margin:18px 0 8px;color:#e0b483}.card{background:#2b211a;border-radius:16px;padding:12px;margin-bottom:12px}
+label{display:block;font-size:14px;margin:6px 0 2px;color:#cdb9a3}input,textarea{width:100%;font-size:18px;padding:10px;border-radius:10px;border:1px solid #5a4636;background:#17110d;color:#fff}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}#timer{font-size:84px;text-align:center;font-variant-numeric:tabular-nums;font-weight:700;margin:6px 0}
+button{font-size:20px;padding:18px 8px;border:0;border-radius:14px;font-weight:700;width:100%;color:#1d1611;background:#e0b483}
+button:disabled{opacity:.35}.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wide{grid-column:1/3}
+#start{background:#8fd18b}#end{background:#ef8a7a}#log{list-style:none;padding:0;margin:10px 0 0;font-size:17px}#log li{display:flex;justify-content:space-between;padding:6px 4px;border-bottom:1px solid #3d3027}
+.rate{display:flex;gap:6px;margin-bottom:6px}.rate b{flex:0 0 64px;align-self:center;font-weight:500}.rate span{flex:1;text-align:center;padding:12px 0;border-radius:10px;background:#17110d;border:1px solid #5a4636;font-size:18px}
+.rate span.on{background:#e0b483;color:#1d1611;font-weight:700}#score{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}#score span{text-align:center;padding:12px 0;border-radius:10px;background:#17110d;border:1px solid #5a4636;font-size:18px}#score span.on{background:#e0b483;color:#1d1611}
+body[data-alert=t30] #sec-brew{background:#6b5313}body[data-alert=t0] #sec-brew{background:#7a2a20}
+
+#wheel{display:block;width:100%;max-width:380px;margin:4px auto}#wheel path{stroke:#1d1611;stroke-width:2;cursor:pointer}#wheel text{pointer-events:none;font-weight:700;fill:#1d1611}#wheel circle{cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}.chips span{padding:10px 14px;border-radius:20px;background:#17110d;border:1px solid #5a4636;font-size:17px}.chips span.on{background:#e0b483;color:#1d1611;font-weight:700}#fsel span{background:#3d3027;border-color:#e0b483}
+.st{border:2px solid #3d3027;border-radius:12px;padding:8px;margin-bottom:8px}.st.cur{border-color:#8fd18b;background:#24331f}.st.done{opacity:.7}.st .r{display:flex;align-items:center;gap:8px}.st b{flex:0 0 64px;font-size:18px}.st input{font-size:22px;padding:8px;text-align:center}.st .cum{flex:0 0 118px;font-size:15px;color:#e0b483}.st small{display:block;color:#cdb9a3;font-size:14px;margin-top:4px}.st .act{width:90px;font-size:16px;padding:6px}
+body.brewing{padding-top:var(--th,110px);padding-bottom:var(--fh,130px)}body.brewing #topbar,body.brewing #footbar{position:fixed;left:0;right:0;z-index:9;background:#1f2a36;box-shadow:0 0 10px #0009}
+body.brewing #topbar{top:0;padding:4px 14px 2px;border-bottom:1px solid #3a4a5c}body.brewing #timer{font-size:56px;margin:0;line-height:1}body.brewing #status{font-size:16px;min-height:0;line-height:1.2}body.brewing #status span{font-size:22px!important}body.brewing #remain{font-size:15px;min-height:0;line-height:1.2}body.brewing #remain:empty{display:none}body.brewing #topbar{padding-bottom:0}
+body.brewing #footbar{bottom:0;padding:6px 14px calc(6px + env(safe-area-inset-bottom));border-top:1px solid #3a4a5c}body.brewing #gohint{display:none}body.brewing #go{margin-top:0}#nextinfo{display:none;text-align:center;font-size:18px;font-weight:700;color:#8fd18b;margin-bottom:6px}body.brewing #nextinfo{display:block}
+#segc,#metro,#tgt{display:none}
+body.brewing #status{display:none}body.brewing #cells{display:grid;grid-template-columns:35% 65%;align-items:stretch;gap:6px}
+body.brewing #segc{display:flex;flex-direction:column;justify-content:center;align-items:center;background:#17202a;border-radius:10px;padding:2px 0}
+#seglbl{font-size:17px;font-weight:700;color:#8fd18b;line-height:1.1}#segsec{font-size:58px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;color:#8fd18b}
+#segc.rest #seglbl,#segc.rest #segsec{color:#f0c36b}body.brewing #timer{display:flex;align-items:center;justify-content:center;font-size:74px;letter-spacing:-2px}
+body.brewing #metro{display:flex;position:relative;margin:16px 0 0;padding:0 2px}
+#metro .s{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;min-width:0}
+#metro .s:before{content:"";position:absolute;top:10px;left:-50%;width:100%;height:5px;background:#5a6b7d;z-index:0}#metro .s:first-child:before{display:none}
+#metro .d{width:22px;height:22px;border-radius:50%;background:#cfe0ef;border:3px solid #1f2a36;position:relative;z-index:1}
+#metro .s small{font-size:15px;color:#cfe0ef;margin-top:1px;white-space:nowrap}
+#metro .s.done .d{background:#4a3a2e}#metro .s.done small{color:#7d6a5a}#metro .s.done:before,#metro .s.cur:before{background:#7d6a5a}
+#metro .s.cur .d{background:#8fd18b;transform:scale(1.35);animation:pulse 1.2s ease-in-out infinite}#metro .s.cur small{color:#8fd18b;font-weight:700}#metro .s.go:before{height:16px;top:4px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='14'%3E%3Cpath d='M3 2l5 5-5 5' fill='none' stroke='%23f0c36b' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") repeat-x;background-size:12px 14px;-webkit-mask:linear-gradient(90deg,#0000,#000 25%,#000 80%,#0000);mask:linear-gradient(90deg,#0000,#000 25%,#000 80%,#0000);animation:run .5s linear infinite}@keyframes run{from{background-position:0 0}to{background-position:12px 0}}
+@keyframes pulse{0%,100%{opacity:.4;box-shadow:0 0 0 0 #8fd18b00}50%{opacity:1;box-shadow:0 0 6px 3px #8fd18bcc,0 0 14px 6px #8fd18b66}}
+body.brewing #tgt{display:block;white-space:nowrap;text-align:center;font-size:20px;font-weight:700;color:#f3e9dc;padding:2px 0 4px;line-height:1.2}#tgt b{font-size:48px;color:#e0b483}
+body.brewing #nextinfo{display:none!important}
+#undo2{display:none}
+body.brewing{padding:0!important;overflow:hidden;height:100dvh}body.brewing>.card:not(#sec-brew){display:none}
+body.brewing #sec-brew>h2,body.brewing #plan,body.brewing #planbtns,body.brewing #plansum,body.brewing #sec-brew>.btns{display:none!important}
+body.brewing #topbar{height:70vh;height:70dvh;display:flex;flex-direction:column;padding:10px 14px 8px}
+body.brewing #cells{flex:0 0 auto}body.brewing #metro{flex:0 0 auto;margin-top:22px}
+body.brewing #tgt{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0;line-height:1}
+#tgt .add{font-size:30px;color:#cdb9a3;margin-bottom:6px}#tgt div{white-space:nowrap}
+body.brewing #tgt b{font-size:min(27vw,130px);letter-spacing:-3px}
+body.brewing #footbar{height:30vh;height:30dvh;display:flex;flex-direction:column;padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+body.brewing #go{flex:1;font-size:40px!important;border-radius:20px}
+body.brewing #undo2{display:block;position:absolute;left:10px;bottom:8px;width:auto;font-size:14px;padding:8px 12px;background:#2c3a49;color:#cdb9a3;border-radius:10px;font-weight:500}
+body.brewing #topbar{position:fixed}
+#actbox{display:none}body.brewing #actbox{display:flex;align-items:center;gap:6px;position:absolute;right:10px;bottom:6px;font-size:15px;color:#cdb9a3}
+#act2{width:96px;font-size:22px;padding:6px 8px;text-align:center;background:#17202a;border:1px solid #3a4a5c;border-radius:10px;color:#f3e9dc}
+#tgt .add{font-size:44px!important;font-weight:700;margin-bottom:0!important}body.brewing #tgt{width:94%;margin:0 auto;overflow:hidden;min-height:0}
+#tgt .big{display:flex;align-items:baseline;justify-content:center;line-height:.9}#tgt .ml{font-size:26px;margin-left:6px;color:#cdb9a3}body.brewing #tgt b{letter-spacing:-4px}
+body.brewing #topbar{padding-bottom:56px}
+</style></head><body>
+<div id="sec-params" class="card"><h2>☕ 沖煮參數</h2>
+<label>豆子</label><input id="bean" placeholder="例：衣索比亞 耶加雪菲">
+<div class="g3"><div><label>粉量 g</label><input id="dose" type="number" inputmode="decimal"></div><div><label>粉水比 1:</label><input id="ratio" type="number" inputmode="decimal" step="0.1" placeholder="15"></div><div><label>水量 g</label><input id="water" type="number" inputmode="decimal"></div></div>
+<div class="g2">
+<div><label>水溫 °C</label><input id="temp" type="number" inputmode="decimal"></div><div><label>研磨度</label><input id="grind" placeholder="例：C40 22 格"></div>
+<div><label>濾杯（選填）</label><input id="dripper" list="dl-dripper" placeholder="可空"></div><div><label>濾紙（選填）</label><input id="filter" list="dl-filter" placeholder="可空"></div>
+<div><label>目標總時間（分:秒）</label><input id="target" placeholder="例：2:30" inputmode="numeric"></div></div>
+<datalist id="dl-dripper"><option>Hario V60<option>Kalita Wave<option>Origami<option>Kono<option>April<option>聰明濾杯</datalist>
+<datalist id="dl-filter"><option>Hario 漂白<option>Hario 無漂白<option>Kalita Wave 185<option>Cafec Abaca<option>Sibarist</datalist>
+</div>
+<div id="sec-brew" class="card"><h2>⏱ 沖煮</h2><div id="topbar"><div id="status" style="text-align:center;font-size:20px;color:#e0b483;min-height:26px">先填好每段注水量</div><div id="cells"><div id="segc"><div id="seglbl">注水中</div><div id="segsec">0</div></div><div id="timer">0:00.0</div></div><div id="metro"></div><div id="tgt"></div><button id="undo2" type="button">↶ 復原</button><div id="actbox">實際到 <input id="act2" type="number" inputmode="decimal" step="0.5"> ml</div><div id="remain" style="text-align:center;font-size:22px;min-height:28px"></div>
+</div><div id="footbar"><div id="nextinfo"></div><button id="go" style="font-size:24px;padding:22px 8px;background:#8fd18b;margin-top:8px">開始悶蒸</button><div id="gohint" style="text-align:center;font-size:15px;color:#cdb9a3;margin:6px 0">開始倒水的那一刻按</div></div>
+<div id="plan"></div><div class="btns" id="planbtns" style="margin:8px 0"><button id="addst" style="font-size:17px;padding:12px;background:#5a4636;color:#f3e9dc">＋ 加一段</button><button id="rmst" style="font-size:17px;padding:12px;background:#5a4636;color:#f3e9dc">－ 減一段</button></div><div id="plansum" style="font-size:15px;color:#cdb9a3;min-height:20px"></div>
+<div class="btns"><button id="undo" disabled style="font-size:16px;padding:12px;background:#cdb9a3">↶ 復原上一步</button><button id="reset" style="font-size:16px;padding:12px;background:#ef8a7a">重新開始</button></div></div>
+<div id="sec-flavor" class="card"><h2>👅 風味問卷</h2><div id="rates"></div>
+<label>風味輪（點大類 → 選細項，可複選）</label><svg id="wheel" viewBox="-110 -110 220 220"></svg><div id="fcat" style="text-align:center;color:#e0b483;font-size:17px;min-height:22px"></div><div id="fnotes" class="chips"></div><label>已選風味（點一下移除）</label><div id="fsel" class="chips"><small style="color:#8a7764">尚未選擇</small></div>
+<label>風味描述</label><textarea id="notes_flavor" rows="2" placeholder="例：柑橘、茉莉花、蜂蜜"></textarea>
+<label>總評分（1-10）</label><div id="score"></div>
+<label>備註</label><textarea id="memo" rows="2"></textarea>
+</div>
+<div id="sec-export" class="card" style="display:none"><h2>📋 匯出</h2><button id="copy" style="font-size:24px;padding:22px 8px;background:#8fd18b">複製文字</button><div id="cmsg" style="text-align:center;font-size:16px;min-height:22px;margin:6px 0;color:#8fd18b"></div><textarea id="out" rows="16" readonly style="font-size:15px;line-height:1.45"></textarea><button id="dljson" style="margin-top:10px;background:#cdb9a3;font-size:17px;padding:12px">下載 JSON</button></div>
+<script>
+const $=id=>document.getElementById(id),P=['bean','dose','water','temp','grind','dripper','filter','target','ratio'];
+const last=JSON.parse(localStorage.getItem('pourover_params')||'{}');P.forEach(k=>{if(last[k]!=null)$(k).value=last[k];$(k).oninput=save});
+function save(){const o={};P.forEach(k=>o[k]=$(k).value);localStorage.setItem('pourover_params',JSON.stringify(o))}
+let lastCur=-1,t0=0,raf=0,ended=null,events=[],cur=-1;const fmt=s=>Math.floor(s/60)+':'+(s%60).toFixed(1).padStart(4,'0');
+let plan=JSON.parse(localStorage.getItem('pourover_plan')||'null')||[{g:''},{g:''},{g:''},{g:''}];const act={};
+const SL=i=>i?`第${i}段`:'悶蒸',cum=i=>plan.slice(0,i+1).reduce((a,x)=>a+(+x.g||0),0),savePlan=()=>localStorage.setItem('pourover_plan',JSON.stringify(plan.map(x=>({g:x.g}))));
+const SE=()=>events.filter(v=>v.si!=null),pouring=()=>{const s=SE();return s.length&&s[s.length-1].stop==null&&!ended},nextStart=i=>{const n=events.find(v=>v.si==i+1);return n?n.sec:null};
+function drawMetro(){const po=pouring(),i2=po?cur:cur+1;$('metro').className=po?'':'rest';$('metro').innerHTML=plan.map((x,i)=>`<div class="s ${i<i2?'done':i==i2?(po?'cur':'go'):''}"><div class="d"></div><small>${i?i:'悶蒸'}</small></div>`).join('');$('tgt').innerHTML=i2<plan.length?`<div class="add">+${+plan[i2].g||0}g</div><div class="big"><b>${cum(i2)}</b><span class="ml">ml</span></div>`:'等水滴完'}
+function syncAct2(){const i=document.activeElement;if(cur>=0&&i!==$('act2'))$('act2').value=act[cur]??cum(cur)}
+function fitTgt(){const t=$('tgt'),b=t.querySelector('.big b');if(!b||!document.body.classList.contains('brewing'))return;const ad=t.querySelector('.add'),H=t.clientHeight-(ad?ad.offsetHeight:0)-4,W=t.clientWidth-2;let f=Math.min(220,H/0.95);b.style.fontSize=f+'px';let w=t.querySelector('.big').scrollWidth;if(w>W){f=f*W/w;b.style.fontSize=f+'px'}}
+addEventListener('resize',fitTgt);
+function renderPlan(){$('plan').innerHTML=plan.map((x,i)=>{const e=events.find(v=>v.si==i),live=i==cur&&!ended,st=live?'cur':e?'done':'';let t='';
+if(e){const ns=nextStart(i);t=`<small>${live&&e.stop==null?'💧 注水中，':'✓ '}開始 ${fmt(e.sec)}`+(e.stop!=null?`　斷水 ${fmt(e.stop)}　注 ${(e.stop-e.sec).toFixed(1)}s`:'　注 <span id="stel">0:00.0</span>')+(e.stop!=null?(ns!=null?`　停 ${(ns-e.stop).toFixed(1)}s`:live?'　停 <span id="rsel">0.0</span>s':''):'')+`</small><small>實際到 <input class="act" data-a="${i}" type="number" inputmode="decimal" value="${act[i]??cum(i)}"> g</small>`}
+return `<div class="st ${st}"><div class="r"><b>${SL(i)}</b><input data-i="${i}" class="pg" type="number" inputmode="decimal" placeholder="注 g" value="${x.g}" ${cur>=0?'disabled':''}><span class="cum">磅秤到 <span id="cum${i}">${cum(i)}</span> g</span></div>${t}
+${i==cur+1&&cur>=0&&!ended?`<small style="color:#8fd18b">接下來：注 ${+x.g||0} g，磅秤到 ${cum(i)} g</small>`:''}</div>`}).join('');
+renderSum();$('planbtns').style.display=cur>=0?'none':'';$('undo').disabled=cur<0;const po=pouring(),last=cur+1>=plan.length;
+$('go').textContent=ended?'已沖完':cur<0?'開始注水：悶蒸':po?'斷水':last?'滴完了（結束）':`開始注水：第${cur+1}段`;$('go').disabled=!!ended;$('go').style.background=po?'#f0c36b':last&&cur>=0?'#ef8a7a':'#8fd18b';
+document.body.classList.toggle('brewing',cur>=0&&!ended);requestAnimationFrame(()=>{const B=document.body.style;B.setProperty('--th',$('topbar').offsetHeight+10+'px');B.setProperty('--fh',$('footbar').offsetHeight+10+'px')});{const po2=pouring(),i2=po2?cur:cur+1;$('nextinfo').textContent=i2<plan.length?`${po2?'正在注 ':''}${SL(i2)}：注 ${+plan[i2].g||0} g → 磅秤到 ${cum(i2)} g`:'等水滴完'}drawMetro();syncAct2();requestAnimationFrame(fitTgt);if(cur!=lastCur){lastCur=cur;const c=document.querySelector('.st.cur');c&&c.scrollIntoView({block:'center'})}
+$('gohint').textContent=ended?'':po?'停止倒水的那一刻按':last&&cur>=0?'水滴完的那一刻按':'開始倒水的那一刻按'}
+$('plan').oninput=e=>{const i=e.target.dataset.i,a=e.target.dataset.a;if(i!=null){plan[i].g=e.target.value;base=null;savePlan();plan.forEach((_,k)=>$('cum'+k).textContent=cum(k));renderSum()}if(a!=null)act[a]=e.target.value};
+function renderSum(){const tot=cum(plan.length-1),w=+$('water').value;$('plansum').textContent=`計畫總水量 ${tot} g`+(w&&tot&&w!=tot?`（⚠ 參數水量是 ${w} g）`:'')}
+$('addst').onclick=()=>{plan.push({g:''});savePlan();renderPlan()};$('rmst').onclick=()=>{if(plan.length>1){plan.pop();savePlan();renderPlan()}};
+const now=()=>(performance.now()-t0)/1000;function tick(){$('timer').textContent=fmt(now());remain();raf=requestAnimationFrame(tick)}
+function mark(label,useW){const s=+now().toFixed(1),e={label,sec:s};if(useW&&$('pw').value!==''){e.water_g=+$('pw').value;$('pw').value=''}events.push(e);$('log').insertAdjacentHTML('beforeend',`<li><span>${label}${e.water_g!=null?' → '+e.water_g+'g':''}</span><span>${fmt(s)}（${s}s）</span></li>`)}
+const tgt=()=>{const m=$('target').value.trim().match(/^(\d+)(?::(\d{1,2}))?$/);return m?(m[2]!=null?+m[1]*60+ +m[2]:+m[1]):null};let al30=0,al0=0;
+function beep(){try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();g.gain.value=.08;o.frequency.value=880;o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+.25)}catch(e){}}
+function alert2(cls,txt){navigator.vibrate&&navigator.vibrate(cls=='t0'?[300,100,300]:200);beep();document.body.dataset.alert=cls}
+function remain(){const T=tgt();if(T==null){$('remain').textContent='';return}const r=T-now();$('remain').textContent=r>=0?'剩餘 '+fmt(r):'超時 '+fmt(-r);if(r<=30&&!al30){al30=1;alert2('t30')}if(r<=0&&!al0){al0=1;alert2('t0')}}
+function status(){if(cur<0||ended)return;const e=SE().pop(),n=now(),st=$('status');{const c=$('segc');if(e.stop==null){c.className='';$('seglbl').textContent='注水中';$('segsec').textContent=Math.floor(n-e.sec)}else{c.className='rest';$('seglbl').textContent='已斷水';$('segsec').textContent=Math.floor(n-e.stop)}}if(e.stop==null){st.innerHTML=`<span style="font-size:30px;color:#8fd18b">💧 ${SL(cur)}注水中 ${Math.floor(n-e.sec)} 秒</span>`;const s=$('stel');if(s)s.textContent=fmt(n-e.sec)}else{st.innerHTML=`<span style="font-size:34px;color:#f0c36b;font-weight:700">⏸ 已斷水 ${Math.floor(n-e.stop)} 秒</span>`;const s=$('rsel');if(s)s.textContent=(n-e.stop).toFixed(1)}}
+const _tick=tick;tick=function(){status();_tick()};
+$('go').onclick=()=>{if(ended)return;if(cur<0){t0=performance.now();al30=al0=0;delete document.body.dataset.alert;events=[];cancelAnimationFrame(raf);tick()}
+if(pouring()){SE().pop().stop=+now().toFixed(1);navigator.vibrate&&navigator.vibrate(60)}else if(cur+1<plan.length){cur++;events.push({label:cur?`第 ${cur} 段注水`:'悶蒸',sec:+now().toFixed(1),si:cur});navigator.vibrate&&navigator.vibrate(60)}
+else{events.push({label:'結束',sec:+now().toFixed(1)});ended=now();cancelAnimationFrame(raf);delete document.body.dataset.alert;$('timer').textContent=fmt(ended);$('status').textContent=`沖完了，總時間 ${fmt(ended)}`;renderPlan();$('sec-flavor').scrollIntoView({behavior:'smooth'});return}renderPlan()};
+$('act2').oninput=e=>{if(cur<0)return;act[cur]=e.target.value;const r=document.querySelector(`.act[data-a="${cur}"]`);if(r)r.value=e.target.value};$('undo2').onclick=()=>$('undo').click();$('undo').onclick=()=>{if(cur<0)return;const e=events.pop();if(e.label=='結束'){ended=null;tick()}else if(e.stop!=null){delete e.stop;events.push(e)}else{delete act[cur];cur--}if(cur<0){cancelAnimationFrame(raf);events=[];t0=0;$('timer').textContent='0:00.0';$('remain').textContent='';$('status').textContent='先填好每段注水量'}renderPlan()};
+$('reset').onclick=()=>{if(cur>=0&&!confirm('重新開始？目前計時會清掉'))return;cancelAnimationFrame(raf);events=[];cur=-1;ended=null;t0=0;for(const k in act)delete act[k];delete document.body.dataset.alert;$('timer').textContent='0:00.0';$('remain').textContent='';$('status').textContent='先填好每段注水量';renderPlan()};
+function timelineOut(){return events.map(e=>{const o={label:e.label,sec:e.sec};if(e.si!=null){const v=act[e.si];o.water_g=v!=null&&v!==''?+v:cum(e.si);o.stop_sec=e.stop??null;o.pour_sec=e.stop!=null?+(e.stop-e.sec).toFixed(1):null;const ns=nextStart(e.si);o.rest_sec_before_next=ns!=null&&e.stop!=null?+(ns-e.stop).toFixed(1):null}return o})}
+const h5=v=>Math.round(v*2)/2;if($('ratio').value===''){const d=+$('dose').value,w=+$('water').value;$('ratio').value=d&&w?+(w/d).toFixed(1):15;save()}
+let base=null;function scalePlan(W){if(cur>=0||!(W>0))return;if(!base)base=plan.map(x=>+x.g||0);const T=base.reduce((a,b)=>a+b,0);if(!T)return;let acc=0;plan.forEach((x,i)=>{if(!base[i])return;const last=base.slice(i+1).every(y=>!y);const v=last?h5(W-acc):h5(base[i]*W/T);x.g=String(v);acc+=v});savePlan();renderPlan()}
+function fromDose(){const d=+$('dose').value,r=+$('ratio').value;if(d>0&&r>0){$('water').value=h5(d*r);save();scalePlan(+$('water').value)}renderSum()}
+$('dose').addEventListener('input',fromDose);$('ratio').addEventListener('input',fromDose);
+$('water').addEventListener('input',()=>{const d=+$('dose').value,w=+$('water').value;if(d>0&&w>0){$('ratio').value=+(w/d).toFixed(1);save()}scalePlan(w);renderSum()});renderPlan();
+const R={acidity:'酸',sweetness:'甜',bitterness:'苦',body:'醇厚度',aftertaste:'餘韻'},rv={};let score=null;
+for(const k in R){const d=document.createElement('div');d.className='rate';d.innerHTML=`<b>${R[k]}</b>`+[1,2,3,4,5].map(i=>`<span data-v="${i}">${i}</span>`).join('');d.onclick=e=>{const v=e.target.dataset.v;if(!v)return;rv[k]=+v;d.querySelectorAll('span').forEach(s=>s.classList.toggle('on',s.dataset.v==v))};$('rates').appendChild(d)}
+$('score').innerHTML=[...Array(10)].map((_,i)=>`<span data-v="${i+1}">${i+1}</span>`).join('');$('score').onclick=e=>{const v=e.target.dataset.v;if(!v)return;score=+v;$('score').querySelectorAll('span').forEach(s=>s.classList.toggle('on',s.dataset.v==v))};
+const FW=[['花香','#d9849d',['紅茶','洋甘菊','玫瑰','茉莉']],['水果','#e0584e',['黑莓','覆盆子','藍莓','草莓','葡萄乾','椰子','櫻桃','鳳梨','葡萄','蘋果','水蜜桃','西洋梨','葡萄柚','柳橙','檸檬','萊姆']],['酸/發酵','#e3b83c',['醋酸','檸檬酸','蘋果酸','酒香','威士忌','發酵','過熟']],['青草/植物','#4f9a4a',['橄欖油','未熟','豆莢','乾草','草本']],['其他','#5aa3b8',['紙味','木質','土壤']],['烘焙','#b4603e',['菸草','焦味','煙燻','穀物','麥芽']],['香料','#a8323c',['胡椒','茴香','肉豆蔻','肉桂','丁香']],['堅果可可','#a87a5a',['花生','榛果','杏仁','巧克力','黑巧克力']],['甜感','#e57a3b',['糖蜜','楓糖','焦糖','蜂蜜','香草']]];
+let fsel=JSON.parse(localStorage.getItem('pourover_notes')||'[]'),fci=-1;
+const PT=(r,a)=>(r*Math.cos(a)).toFixed(2)+' '+(r*Math.sin(a)).toFixed(2);
+function arc(r0,r1,a0,a1){const L=a1-a0>Math.PI?1:0;return `M${PT(r0,a0)} L${PT(r1,a0)} A${r1} ${r1} 0 ${L} 1 ${PT(r1,a1)} L${PT(r0,a1)} A${r0} ${r0} 0 ${L} 0 ${PT(r0,a0)}Z`}
+function lbl(t,r,am,fs,col,fw){let d=am*180/Math.PI,x=r*Math.cos(am),y=r*Math.sin(am);if(d>90&&d<270)d-=180;return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" transform="rotate(${d.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)})" text-anchor="middle" dominant-baseline="middle" style="font-size:${fs}px;fill:${col||'#1d1611'};font-weight:${fw||700}">${t}</text>`}
+function drawWheel(){let h='';const S=-Math.PI/2;
+if(fci<0){const tot=FW.reduce((a,c)=>a+c[2].length,0),u=2*Math.PI/tot;let a=S;
+FW.forEach(([c,col,ns],i)=>{const a0=a,a1=a+ns.length*u;h+=`<path data-i="${i}" fill="${col}" d="${arc(28,58,a0,a1)}"/>`;const cnt=fsel.filter(x=>x.startsWith(c+'/')).length;
+const am=(a0+a1)/2;h+=lbl(c.split('/')[0]+(cnt?'●'+cnt:''),43,am,ns.length>3?8:6.5);
+ns.forEach((n,j)=>{const b0=a0+j*u,on=fsel.includes(c+'/'+n);h+=`<path data-i="${i}" fill="${col}" style="opacity:${on?1:.6}" d="${arc(58,108,b0,b0+u)}"/>`;h+=lbl(n,83,b0+u/2+0.0001,6,on?'#000':'#1d1611',on?900:500)});a=a1});
+h+=`<circle r="28" fill="#2b211a"/><text x="0" y="0" text-anchor="middle" dominant-baseline="middle" style="fill:#e0b483;font-size:11px">${fsel.length?fsel.length+' 項':'點選大類'}</text>`;$('fcat').textContent='點任一大類放大選細項'}
+else{const[c,col,ns]=FW[fci],u=2*Math.PI/ns.length;ns.forEach((n,j)=>{const b0=S+j*u,k=c+'/'+n,on=fsel.includes(k);h+=`<path data-n="${k}" fill="${on?col:'#17110d'}" stroke-width="2" style="stroke:${col}" d="${arc(46,108,b0,b0+u)}"/>`;h+=lbl(n,77,b0+u/2+0.0001,ns.length>10?10:13,on?'#1d1611':'#f3e9dc')});
+h+=`<circle data-back="1" r="44" fill="${col}"/><text x="0" y="-7" text-anchor="middle" style="font-size:13px;font-weight:700">${c}</text><text x="0" y="12" text-anchor="middle" style="font-size:10px">← 返回</text>`;$('fcat').textContent=c+'：點選細項，點中間返回'}
+$('wheel').innerHTML=h;$('fnotes').innerHTML='';
+$('fsel').innerHTML=fsel.length?fsel.map(x=>`<span data-n="${x}">${x.split('/').pop()} ✕</span>`).join(''):'<small style="color:#8a7764">尚未選擇</small>';localStorage.setItem('pourover_notes',JSON.stringify(fsel))}
+const tog=e=>{const n=e.target.dataset.n;if(!n)return;fsel=fsel.includes(n)?fsel.filter(x=>x!=n):[...fsel,n];drawWheel()};
+$('wheel').onclick=e=>{const d=e.target.dataset||{};if(d.back){fci=-1;drawWheel()}else if(d.n)tog(e);else if(d.i!=null){fci=+d.i;drawWheel()}};$('fsel').onclick=tog;drawWheel();
+function buildBody(){save();const p={};P.forEach(k=>p[k]=$(k).value);['dose','water','temp','ratio'].forEach(k=>p[k]=p[k]===''?null:+p[k]);
+return {type:'pourover_log',created_at:new Date().toISOString(),params:p,timeline:timelineOut(),total_sec:ended==null?null:+ended.toFixed(1),flavor:{...rv,description:$('notes_flavor').value,score},memo:$('memo').value,pour_plan:plan.map((x,i)=>({label:SL(i),planned_g:x.g===''?null:+x.g,planned_cum_g:cum(i)})),flavor_notes:[...fsel]}}
+function buildText(){const b=buildBody(),p=b.params,v=x=>x===''||x==null?'—':x,L=[];const d=new Date(b.created_at);
+L.push(`☕ 手沖紀錄 ${d.toLocaleString('zh-TW',{hour12:false})}`);L.push(`豆子：${v(p.bean)}`);
+L.push(`粉量：${v(p.dose)} g｜粉水比：1:${v(p.ratio)}｜水量：${v(p.water)} g`);L.push(`水溫：${v(p.temp)} °C｜研磨度：${v(p.grind)}`);L.push(`濾杯：${v(p.dripper)}｜濾紙：${v(p.filter)}`);if(p.target)L.push(`目標總時間：${p.target}`);
+L.push('','⏱ 分段');let st=0;b.timeline.forEach(e=>{if(e.label=='結束'){L.push(`結束（滴完）：${fmt(e.sec)}`);return}const i=st++;const pl=b.pour_plan[i]||{};
+L.push(`${pl.label||e.label}：目標到 ${v(pl.planned_cum_g)} g（注 ${v(pl.planned_g)} g）／實際到 ${v(e.water_g)} g`);L.push(`　開始 ${fmt(e.sec)}　斷水 ${e.stop_sec!=null?fmt(e.stop_sec):'—'}　注水 ${v(e.pour_sec)} 秒　斷水休息 ${e.rest_sec_before_next!=null?e.rest_sec_before_next+' 秒':'—'}`)});
+L.push(`總時間：${b.total_sec!=null?fmt(b.total_sec)+'（'+b.total_sec+' 秒）':'—'}`);
+L.push('','👅 風味');L.push(Object.keys(R).map(k=>`${R[k]} ${v(b.flavor[k])}`).join('｜'));L.push(`風味輪：${b.flavor_notes.length?b.flavor_notes.join('、'):'—'}`);L.push(`風味描述：${v(b.flavor.description)}`);L.push(`總評分：${v(b.flavor.score)} / 10`);L.push(`備註：${v(b.memo)}`);return L.join('\n')}
+function refreshOut(){const show=!!ended;$('sec-export').style.display=show?'':'none';if(show)$('out').value=buildText()}
+setInterval(()=>{if(ended&&document.activeElement!==$('out'))refreshOut();else if(!ended)$('sec-export').style.display='none'},800);
+$('copy').onclick=async()=>{refreshOut();const t=$('out').value,m=$('cmsg');try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(t)}else throw 0;m.textContent='✅ 已複製'}catch(e){const a=$('out');a.removeAttribute('readonly');a.focus();a.select();a.setSelectionRange(0,t.length);let ok=false;try{ok=document.execCommand('copy')}catch(e2){}a.setAttribute('readonly','');m.textContent=ok?'✅ 已複製':'已全選，請長按「拷貝」'}};
+$('dljson').onclick=()=>{const b=buildBody(),u=URL.createObjectURL(new Blob([JSON.stringify(b,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=u;a.download='pourover-'+(()=>{const d=new Date(),z=n=>String(n).padStart(2,'0');return d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+'-'+z(d.getHours())+z(d.getMinutes())})()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
