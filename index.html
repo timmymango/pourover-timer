@@ -51,6 +51,7 @@ body.brewing.ready #actbox{display:none}
 #tgt .add{font-size:44px!important;font-weight:700;margin-bottom:0!important}body.brewing #tgt{width:94%;margin:0 auto;overflow:hidden;min-height:0}
 #tgt .big{display:flex;align-items:baseline;justify-content:center;line-height:.9}#tgt .ml{font-size:26px;margin-left:6px;color:#cdb9a3}body.brewing #tgt b{letter-spacing:-4px}
 body.brewing #topbar{padding-bottom:56px}
+#plansum{font-size:15px;color:#cdb9a3;min-height:20px;margin-bottom:8px}#plansum.warn{color:#ff7b72;background:#4d1717;border:1.5px solid #ff5252;border-radius:10px;padding:8px 10px;font-weight:700;font-size:16px}
 </style></head><body>
 <div id="sec-params" class="card"><h2>☕ 沖煮參數</h2>
 <label>豆子</label><input id="bean" placeholder="例：衣索比亞 耶加雪菲">
@@ -64,7 +65,7 @@ body.brewing #topbar{padding-bottom:56px}
 </div>
 <div id="sec-brew" class="card"><h2>⏱ 沖煮</h2><div id="topbar"><div id="status" style="text-align:center;font-size:20px;color:#e0b483;min-height:26px">先填好每段注水量</div><div id="cells"><div id="segc"><div id="seglbl">注水中</div><div id="segsec">0</div></div><div id="timer">0:00.0</div></div><div id="metro"></div><div id="tgt"></div><button id="undo2" type="button">↶ 復原</button><div id="actbox">實際到 <input id="act2" type="number" inputmode="decimal" step="0.5"> ml</div><div id="remain" style="text-align:center;font-size:22px;min-height:28px"></div>
 </div><div id="footbar"><div id="nextinfo"></div><button id="go" style="font-size:24px;padding:22px 8px;background:#8fd18b;margin-top:8px">開始悶蒸</button><div id="gohint" style="text-align:center;font-size:15px;color:#cdb9a3;margin:6px 0">開始倒水的那一刻按</div></div>
-<div id="plan"></div><div class="btns" id="planbtns" style="margin:8px 0"><button id="addst" style="font-size:17px;padding:12px;background:#5a4636;color:#f3e9dc">＋ 加一段</button><button id="rmst" style="font-size:17px;padding:12px;background:#5a4636;color:#f3e9dc">－ 減一段</button></div><div id="plansum" style="font-size:15px;color:#cdb9a3;min-height:20px"></div>
+<div id="plan"></div><div class="btns" id="planbtns" style="margin:8px 0"><button id="addst" style="font-size:17px;padding:12px;background:#5a4636;color:#f3e9dc">＋ 加一段</button><button id="rmst" style="font-size:17px;padding:12px;background:#5a4636;color:#f3e9dc">－ 減一段</button></div><div id="plansum"></div>
 <div class="btns"><button id="undo" disabled style="font-size:16px;padding:12px;background:#cdb9a3">↶ 復原上一步</button><button id="reset" style="font-size:16px;padding:12px;background:#ef8a7a">重新開始</button></div></div>
 <div id="sec-flavor" class="card"><h2>👅 風味問卷</h2><div id="rates"></div>
 <label>風味輪（點大類 → 選細項，可複選）</label><svg id="wheel" viewBox="-110 -110 220 220"></svg><div id="fcat" style="text-align:center;color:#e0b483;font-size:17px;min-height:22px"></div><div id="fnotes" class="chips"></div><label>已選風味（點一下移除）</label><div id="fsel" class="chips"><small style="color:#8a7764">尚未選擇</small></div>
@@ -98,7 +99,7 @@ if(ended)$('go').textContent='已沖完';else if(cur<0&&!ready)$('go').textConte
 document.body.classList.toggle('brewing',(ready||cur>=0)&&!ended);document.body.classList.toggle('ready',ready&&cur<0&&!ended);requestAnimationFrame(()=>{const B=document.body.style;B.setProperty('--th',$('topbar').offsetHeight+10+'px');B.setProperty('--fh',$('footbar').offsetHeight+10+'px')});{const po2=pouring(),i2=po2?cur:cur+1;$('nextinfo').textContent=i2<plan.length?`${po2?'正在注 ':''}${SL(i2)}：注 ${+plan[i2].g||0} ml → 磅秤到 ${cum(i2)} ml`:'等水滴完'}drawMetro();syncAct2();requestAnimationFrame(fitTgt);if(cur!=lastCur){lastCur=cur;const c=document.querySelector('.st.cur');c&&c.scrollIntoView({block:'center'})}
 $('gohint').textContent=ended?'':cur<0&&!ready?'先進大畫面預備，再開始注水':po?'停止倒水的那一刻按':last&&cur>=0?'水滴完的那一刻按':'開始倒水的那一刻按';if(ready&&cur<0){$('seglbl').textContent='預備';$('segsec').textContent='0';$('segc').className='';$('timer').textContent='0:00.0';$('undo2').textContent='返回設定'}else{$('undo2').textContent='↶ 復原'}}
 $('plan').oninput=e=>{const i=e.target.dataset.i,a=e.target.dataset.a;if(i!=null){plan[i].g=e.target.value;base=null;savePlan();plan.forEach((_,k)=>$('cum'+k).textContent=cum(k));renderSum()}if(a!=null)act[a]=e.target.value};
-function renderSum(){const tot=cum(plan.length-1),w=+$('water').value;$('plansum').textContent=`計畫總水量 ${tot} ml`+(w&&tot&&w!=tot?`（⚠ 參數水量是 ${w} ml）`:'')}
+function renderSum(){const tot=cum(plan.length-1),w=+$('water').value,bad=!!(w&&tot&&w!=tot),el=$('plansum');el.classList.toggle('warn',bad);el.textContent=`計畫總水量 ${tot} ml`+(bad?`（⚠ 參數水量是 ${w} ml）`:'')}
 $('addst').onclick=()=>{plan.push({g:''});savePlan();renderPlan()};$('rmst').onclick=()=>{if(plan.length>1){plan.pop();savePlan();renderPlan()}};
 const now=()=>(performance.now()-t0)/1000;function tick(){$('timer').textContent=fmt(now());remain();raf=requestAnimationFrame(tick)}
 function mark(label,useW){const s=+now().toFixed(1),e={label,sec:s};if(useW&&$('pw').value!==''){e.water_g=+$('pw').value;$('pw').value=''}events.push(e);$('log').insertAdjacentHTML('beforeend',`<li><span>${label}${e.water_g!=null?' → '+e.water_g+' ml':''}</span><span>${fmt(s)}（${s}s）</span></li>`)}
